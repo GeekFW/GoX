@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input'
 import { Label } from '../components/ui/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/Select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs'
+import { Switch } from '../components/ui/Switch'
 import useAppStore from '../store/useAppStore'
 
 /**
@@ -13,7 +14,11 @@ import useAppStore from '../store/useAppStore'
  * 提供应用的各种配置选项
  */
 const SettingsPage = () => {
-  const { theme, toggleTheme } = useAppStore()
+  const { theme, themeColor, setTheme, setThemeColor } = useAppStore()
+  
+  const toggleTheme = (newTheme) => {
+    setTheme(newTheme)
+  }
   const [settings, setSettings] = useState({
     // 通用设置
     language: 'zh-CN',
@@ -73,7 +78,7 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 pb-16">
       {/* 页面标题和操作 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -81,11 +86,18 @@ const SettingsPage = () => {
           <h1 className="text-2xl font-bold">设置</h1>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={handleReset}>
+          <Button 
+            variant="outline" 
+            className="bg-theme hover:bg-theme/50 text-theme-foreground border-theme hover:border-theme/50 cursor-pointer"
+            onClick={handleReset}
+          >
             <RotateCcw className="w-4 h-4 mr-2" />
             重置
           </Button>
-          <Button onClick={handleSave}>
+          <Button 
+            className="bg-theme hover:bg-theme/50 text-theme-foreground cursor-pointer"
+            onClick={handleSave}
+          >
             <Save className="w-4 h-4 mr-2" />
             保存
           </Button>
@@ -122,7 +134,7 @@ const SettingsPage = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="theme">主题</Label>
+                  <Label htmlFor="theme">主题模式</Label>
                   <Select value={theme} onValueChange={toggleTheme}>
                     <SelectTrigger>
                       <SelectValue />
@@ -135,6 +147,32 @@ const SettingsPage = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="themeColor">主题颜色</Label>
+                  <div className="flex gap-3">
+                    {[
+                      { value: 'blue', color: 'hsl(221.2, 83.2%, 53.3%)', name: '蓝色' },
+                      { value: 'green', color: 'hsl(142, 76%, 36%)', name: '绿色' },
+                      { value: 'red', color: 'hsl(0, 72%, 51%)', name: '红色' },
+                      { value: 'purple', color: 'hsl(262.1, 83.3%, 57.8%)', name: '紫色' },
+                      { value: 'pink', color: 'hsl(330, 81%, 60%)', name: '粉色' },
+                      { value: 'cyan', color: 'hsl(190, 95%, 39%)', name: '青色' }
+                    ].map((theme) => (
+                      <button
+                        key={theme.value}
+                        type="button"
+                        className={`w-8 h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 ${
+                          themeColor === theme.value 
+                            ? 'border-foreground shadow-lg' 
+                            : 'border-border hover:border-foreground/50'
+                        }`}
+                        style={{ backgroundColor: theme.color }}
+                        onClick={() => setThemeColor(theme.value)}
+                        title={theme.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="language">语言</Label>
                   <Select value={settings.language} onValueChange={(value) => updateSetting('language', value)}>
                     <SelectTrigger>
@@ -145,6 +183,40 @@ const SettingsPage = () => {
                       <SelectItem value="en-US">English</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+              
+              {/* 颜色主题预览 */}
+              <div className="space-y-2">
+                <Label>主题预览</Label>
+                <div className="flex gap-2 p-4 bg-muted/50 rounded-lg">
+                  <Button 
+                    size="sm"
+                    className="bg-theme hover:bg-theme/50 text-theme-foreground cursor-pointer"
+                  >
+                    主要按钮
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    className="bg-theme hover:bg-theme/50 text-theme-foreground cursor-pointer"
+                  >
+                    次要按钮
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="bg-theme hover:bg-theme/50 text-theme-foreground border-theme hover:border-theme/50 cursor-pointer"
+                  >
+                    边框按钮
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="bg-theme hover:bg-theme/50 text-theme-foreground cursor-pointer"
+                  >
+                    幽灵按钮
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -160,12 +232,10 @@ const SettingsPage = () => {
                   <Label htmlFor="autoStart">开机自启动</Label>
                   <p className="text-sm text-muted-foreground">系统启动时自动运行应用</p>
                 </div>
-                <input
-                  type="checkbox"
+                <Switch
                   id="autoStart"
                   checked={settings.autoStart}
-                  onChange={(e) => updateSetting('autoStart', e.target.checked)}
-                  className="rounded"
+                  onCheckedChange={(checked) => updateSetting('autoStart', checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -173,12 +243,10 @@ const SettingsPage = () => {
                   <Label htmlFor="minimizeToTray">最小化到系统托盘</Label>
                   <p className="text-sm text-muted-foreground">关闭窗口时最小化到系统托盘</p>
                 </div>
-                <input
-                  type="checkbox"
+                <Switch
                   id="minimizeToTray"
                   checked={settings.minimizeToTray}
-                  onChange={(e) => updateSetting('minimizeToTray', e.target.checked)}
-                  className="rounded"
+                  onCheckedChange={(checked) => updateSetting('minimizeToTray', checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -186,12 +254,10 @@ const SettingsPage = () => {
                   <Label htmlFor="checkUpdates">自动检查更新</Label>
                   <p className="text-sm text-muted-foreground">启动时检查应用更新</p>
                 </div>
-                <input
-                  type="checkbox"
+                <Switch
                   id="checkUpdates"
                   checked={settings.checkUpdates}
-                  onChange={(e) => updateSetting('checkUpdates', e.target.checked)}
-                  className="rounded"
+                  onCheckedChange={(checked) => updateSetting('checkUpdates', checked)}
                 />
               </div>
             </CardContent>
@@ -242,12 +308,10 @@ const SettingsPage = () => {
                   <Label htmlFor="allowLan">允许局域网连接</Label>
                   <p className="text-sm text-muted-foreground">允许其他设备通过局域网连接代理</p>
                 </div>
-                <input
-                  type="checkbox"
+                <Switch
                   id="allowLan"
                   checked={settings.allowLan}
-                  onChange={(e) => updateSetting('allowLan', e.target.checked)}
-                  className="rounded"
+                  onCheckedChange={(checked) => updateSetting('allowLan', checked)}
                 />
               </div>
             </CardContent>
@@ -276,12 +340,10 @@ const SettingsPage = () => {
                   <Label htmlFor="bypassChina">绕过中国大陆</Label>
                   <p className="text-sm text-muted-foreground">中国大陆网站直连</p>
                 </div>
-                <input
-                  type="checkbox"
+                <Switch
                   id="bypassChina"
                   checked={settings.bypassChina}
-                  onChange={(e) => updateSetting('bypassChina', e.target.checked)}
-                  className="rounded"
+                  onCheckedChange={(checked) => updateSetting('bypassChina', checked)}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -289,12 +351,10 @@ const SettingsPage = () => {
                   <Label htmlFor="bypassPrivate">绕过私有网络</Label>
                   <p className="text-sm text-muted-foreground">局域网地址直连</p>
                 </div>
-                <input
-                  type="checkbox"
+                <Switch
                   id="bypassPrivate"
                   checked={settings.bypassPrivate}
-                  onChange={(e) => updateSetting('bypassPrivate', e.target.checked)}
-                  className="rounded"
+                  onCheckedChange={(checked) => updateSetting('bypassPrivate', checked)}
                 />
               </div>
             </CardContent>
@@ -371,8 +431,18 @@ const SettingsPage = () => {
                   <p>基于 Wails 和 React 构建</p>
                 </div>
                 <div className="flex justify-center space-x-2">
-                  <Button variant="outline">检查更新</Button>
-                  <Button variant="outline">查看日志</Button>
+                  <Button 
+                    variant="outline"
+                    className="bg-theme hover:bg-theme/50 text-theme-foreground border-theme hover:border-theme/50 cursor-pointer"
+                  >
+                    检查更新
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="bg-theme hover:bg-theme/50 text-theme-foreground border-theme hover:border-theme/50 cursor-pointer"
+                  >
+                    查看日志
+                  </Button>
                 </div>
               </div>
             </CardContent>

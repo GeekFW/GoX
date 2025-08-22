@@ -1,5 +1,15 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { 
+  AddServer, 
+  UpdateServer, 
+  RemoveServer, 
+  ListServers, 
+  ValidateServerName,
+  StartProxy,
+  StopProxy,
+  GetProxyStatus
+} from '../../wailsjs/go/main/App'
 
 /**
  * 应用程序状态管理
@@ -38,24 +48,107 @@ const useAppStore = create(
       setCurrentPage: (page) => set({ currentPage: page }),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       
-      // 服务器管理
-      addServer: (server) => set((state) => ({
-        servers: [...state.servers, { ...server, id: Date.now().toString() }]
-      })),
+      // 服务器管理 - 集成后端API
+      loadServers: async () => {
+        try {
+          const servers = await ListServers()
+          set({ servers })
+          return servers
+        } catch (error) {
+          console.error('Failed to load servers:', error)
+          return []
+        }
+      },
       
-      updateServer: (id, updates) => set((state) => ({
-        servers: state.servers.map(server => 
-          server.id === id ? { ...server, ...updates } : server
-        )
-      })),
+      addServer: async (server) => {
+        try {
+          await AddServer(server)
+          // 重新加载服务器列表
+          const { loadServers } = get()
+          await loadServers()
+          return true
+        } catch (error) {
+          console.error('Failed to create server:', error)
+          throw error
+        }
+      },
       
-      removeServer: (id) => set((state) => ({
-        servers: state.servers.filter(server => server.id !== id),
-        activeServer: state.activeServer?.id === id ? null : state.activeServer
-      })),
+      updateServer: async (server) => {
+        try {
+          await UpdateServer(server)
+          // 重新加载服务器列表
+          const { loadServers } = get()
+          await loadServers()
+          return true
+        } catch (error) {
+          console.error('Failed to update server:', error)
+          throw error
+        }
+      },
+      
+      removeServer: async (id) => {
+        try {
+          await RemoveServer(id)
+          // 重新加载服务器列表
+          const { loadServers } = get()
+          await loadServers()
+          // 如果删除的是当前活动服务器，清除活动状态
+          const { activeServer } = get()
+          if (activeServer?.id === id) {
+            set({ activeServer: null })
+          }
+          return true
+        } catch (error) {
+          console.error('Failed to delete server:', error)
+          throw error
+        }
+      },
+      
+      validateServerName: async (name, excludeID = '') => {
+        try {
+          await ValidateServerName(name, excludeID)
+          return true
+        } catch (error) {
+          throw error
+        }
+      },
       
       setActiveServer: (server) => set({ activeServer: server }),
       setProxyStatus: (status) => set({ proxyStatus: status }),
+      
+      // 代理管理 - 集成后端API
+      startProxy: async (server) => {
+        try {
+          set({ proxyStatus: 'connecting' })
+          await StartProxy(server)
+          set({ proxyStatus: 'running', activeServer: server })
+          return true
+        } catch (error) {
+          console.error('Failed to start proxy:', error)
+          set({ proxyStatus: 'stopped' })
+          throw error
+        }
+      },
+      
+      stopProxy: async () => {
+        try {
+          await StopProxy()
+          set({ proxyStatus: 'stopped', activeServer: null })
+          return true
+        } catch (error) {
+          console.error('Failed to stop proxy:', error)
+          throw error
+        }
+      },
+      
+      refreshProxyStatus: async () => {
+        try {
+          const status = await GetProxyStatus()
+          set({ proxyStatus: status })
+        } catch (error) {
+          console.error('Failed to refresh proxy status:', error)
+        }
+      },
       
       // 系统状态更新
       updateSystemStats: (stats) => set({ systemStats: stats }),

@@ -30,11 +30,9 @@ const ServerCard = ({ server, onEdit, onDelete, onCopy, onConnect }) => {
     }
   }
   
-  // 获取延迟颜色
-  const getDelayColor = (delay) => {
-    if (delay < 100) return 'text-green-600'
-    if (delay < 200) return 'text-yellow-600'
-    return 'text-red-600'
+  // 获取TLS状态显示
+  const getTLSStatus = (tls) => {
+    return tls ? 'TLS' : '无加密'
   }
   
   // 处理连接/断开
@@ -85,15 +83,25 @@ const ServerCard = ({ server, onEdit, onDelete, onCopy, onConnect }) => {
             <span className="font-mono">{server.port}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">延迟:</span>
-            <span className={`font-medium ${getDelayColor(server.delay)}`}>
-              {server.delay}ms
-            </span>
+            <span className="text-muted-foreground">传输:</span>
+            <span className="font-mono text-xs">{getTLSStatus(server.tls)}</span>
           </div>
-          {server.security && (
+          {server.protocol === 'vmess' && server.security && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">加密:</span>
               <span className="font-mono text-xs">{server.security}</span>
+            </div>
+          )}
+          {server.protocol === 'vless' && server.flow && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">流控:</span>
+              <span className="font-mono text-xs">{server.flow}</span>
+            </div>
+          )}
+          {server.protocol === 'trojan' && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">SNI:</span>
+              <span className="font-mono text-xs">{server.sni || '未设置'}</span>
             </div>
           )}
         </div>
@@ -106,6 +114,7 @@ const ServerCard = ({ server, onEdit, onDelete, onCopy, onConnect }) => {
               variant="outline" 
               onClick={() => onCopy(server)}
               title="复制配置"
+              className="cursor-pointer"
             >
               <Copy className="w-3 h-3" />
             </Button>
@@ -114,6 +123,7 @@ const ServerCard = ({ server, onEdit, onDelete, onCopy, onConnect }) => {
               variant="outline" 
               onClick={() => onEdit(server)}
               title="编辑服务器"
+              className="cursor-pointer"
             >
               <Edit className="w-3 h-3" />
             </Button>
@@ -122,7 +132,7 @@ const ServerCard = ({ server, onEdit, onDelete, onCopy, onConnect }) => {
               variant="outline" 
               onClick={() => onDelete(server.id)}
               title="删除服务器"
-              className="text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive cursor-pointer"
             >
               <Trash2 className="w-3 h-3" />
             </Button>
@@ -133,7 +143,7 @@ const ServerCard = ({ server, onEdit, onDelete, onCopy, onConnect }) => {
             variant={isActive && proxyStatus === 'running' ? 'destructive' : 'default'}
             onClick={handleConnect}
             disabled={proxyStatus === 'connecting'}
-            className="min-w-[60px]"
+            className="cursor-pointer min-w-[60px]"
           >
             {proxyStatus === 'connecting' && isActive ? (
               <>连接中...</>

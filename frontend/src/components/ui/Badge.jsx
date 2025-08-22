@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { cva } from 'class-variance-authority'
 import { cn } from '../../lib/utils'
 
@@ -36,7 +37,22 @@ const badgeVariants = cva(
  */
 const Badge = React.forwardRef(({ className, variant, ...props }, ref) => {
   return (
-    <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />
+    <motion.div 
+      ref={ref} 
+      className={cn(badgeVariants({ variant }), className)} 
+      whileHover={{
+        scale: 1.05,
+        y: -1
+      }}
+      whileTap={{
+        scale: 0.95
+      }}
+      transition={{
+        duration: 0.2,
+        ease: "easeInOut"
+      }}
+      {...props} 
+    />
   )
 })
 Badge.displayName = "Badge"

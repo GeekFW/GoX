@@ -21,6 +21,8 @@ var (
 	ConfigDir string
 	// LogDir 日志文件目录
 	LogDir string
+	// ServerDir 服务器配置目录
+	ServerDir string
 	// ConfigFilePath 配置文件完整路径
 	ConfigFilePath string
 	// LogFilePath 日志文件完整路径
@@ -38,6 +40,7 @@ func InitRuntimePaths() error {
 	AppDir = filepath.Join(homeDir, "."+AppName)
 	ConfigDir = filepath.Join(AppDir, "config")
 	LogDir = filepath.Join(AppDir, "logs")
+	ServerDir = filepath.Join(AppDir, "server")
 
 	// 设置文件路径
 	ConfigFilePath = filepath.Join(ConfigDir, ConfigFileName)
@@ -48,6 +51,9 @@ func InitRuntimePaths() error {
 		return err
 	}
 	if err := os.MkdirAll(LogDir, 0755); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(ServerDir, 0755); err != nil {
 		return err
 	}
 
@@ -77,4 +83,9 @@ func GetConfigFilePath() string {
 // GetLogFilePath 获取日志文件路径
 func GetLogFilePath() string {
 	return LogFilePath
+}
+
+// GetServerDir 获取服务器配置目录
+func GetServerDir() string {
+	return ServerDir
 }

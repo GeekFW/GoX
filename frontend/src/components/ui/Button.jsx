@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { cva } from 'class-variance-authority'
 import { cn } from '../../lib/utils'
 
@@ -35,11 +36,22 @@ const buttonVariants = cva(
  * 按钮组件
  */
 const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
-  const Comp = asChild ? 'span' : 'button'
+  const Comp = asChild ? motion.span : motion.button
+  
   return (
     <Comp
       className={cn(buttonVariants({ variant, size, className }))}
       ref={ref}
+      whileHover={{ 
+        scale: 1.02,
+        transition: { duration: 0.2, ease: "easeOut" }
+      }}
+      whileTap={{ 
+        scale: 0.98,
+        transition: { duration: 0.1, ease: "easeInOut" }
+      }}
+      initial={{ scale: 1 }}
+      animate={{ scale: 1 }}
       {...props}
     />
   )

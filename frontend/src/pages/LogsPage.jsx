@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Input } from '../components/ui/Input'
+import { Label } from '../components/ui/Label'
+import { Switch } from '../components/ui/Switch'
+import { Loading } from '../components/ui/Loading'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/Select'
 import useAppStore from '../store/useAppStore'
 import { GetLogLines } from '../../wailsjs/go/main/App'
@@ -131,7 +134,7 @@ const LogsPage = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 pb-16">
       {/* 页面标题和操作 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -140,15 +143,30 @@ const LogsPage = () => {
           <Badge variant="secondary">{filteredLogs.length} 条记录</Badge>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={loadLogsFromFile} disabled={isLoading}>
+          <Button 
+            variant="outline" 
+            className="bg-theme hover:bg-theme/50 text-theme-foreground border-theme hover:border-theme/50 cursor-pointer"
+            onClick={loadLogsFromFile} 
+            disabled={isLoading}
+          >
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             刷新
           </Button>
-          <Button variant="outline" onClick={handleExportLogs} disabled={filteredLogs.length === 0}>
+          <Button 
+            variant="outline" 
+            className="bg-theme hover:bg-theme/50 text-theme-foreground border-theme hover:border-theme/50 cursor-pointer"
+            onClick={handleExportLogs} 
+            disabled={filteredLogs.length === 0}
+          >
             <Download className="w-4 h-4 mr-2" />
             导出
           </Button>
-          <Button variant="outline" onClick={handleClearLogs} disabled={logs.length === 0}>
+          <Button 
+            variant="outline" 
+            className="bg-theme hover:bg-theme/50 text-theme-foreground border-theme hover:border-theme/50 cursor-pointer"
+            onClick={handleClearLogs} 
+            disabled={logs.length === 0}
+          >
             <Trash2 className="w-4 h-4 mr-2" />
             清空
           </Button>
@@ -191,16 +209,14 @@ const LogsPage = () => {
               </Select>
             </div>
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
+              <Switch
                 id="autoScroll"
                 checked={autoScroll}
-                onChange={(e) => setAutoScroll(e.target.checked)}
-                className="rounded"
+                onCheckedChange={setAutoScroll}
               />
-              <label htmlFor="autoScroll" className="text-sm font-medium">
+              <Label htmlFor="autoScroll" className="text-sm font-medium">
                 自动滚动
-              </label>
+              </Label>
             </div>
           </div>
         </CardContent>
@@ -217,8 +233,14 @@ const LogsPage = () => {
             className="bg-muted/50 rounded-md p-4 h-96 overflow-auto font-mono text-sm space-y-1"
           >
             {filteredLogs.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                {isLoading ? '正在加载日志...' : (allLogs.length === 0 ? '暂无日志记录' : '没有匹配的日志记录')}
+              <div className="text-center py-8">
+                {isLoading ? (
+                  <Loading variant="dots" text="正在加载日志..." size="default" />
+                ) : (
+                  <div className="text-muted-foreground">
+                    {allLogs.length === 0 ? '暂无日志记录' : '没有匹配的日志记录'}
+                  </div>
+                )}
               </div>
             ) : (
               filteredLogs.map((log, index) => (

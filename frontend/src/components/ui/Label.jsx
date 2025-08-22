@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion } from 'framer-motion'
 import { cva } from 'class-variance-authority'
 import { cn } from '../../lib/utils'
 
@@ -13,9 +14,17 @@ const labelVariants = cva(
  * 标签组件
  */
 const Label = React.forwardRef(({ className, ...props }, ref) => (
-  <label
+  <motion.label
     ref={ref}
     className={cn(labelVariants(), className)}
+    whileHover={{
+      scale: 1.02,
+      color: "hsl(var(--primary))"
+    }}
+    transition={{
+      duration: 0.2,
+      ease: "easeInOut"
+    }}
     {...props}
   />
 ))

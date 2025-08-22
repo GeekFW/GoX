@@ -43,7 +43,7 @@ const StatusBar = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-6 bg-background border-t border-border flex items-center justify-between px-4 text-xs text-muted-foreground z-50">
+    <div className="fixed bottom-0 left-0 right-0 h-10 bg-background/80 backdrop-blur-md border-t border-border flex items-center justify-between px-6 py-2 text-xs text-muted-foreground z-50">
       {/* 左侧：服务器状态 */}
       <div className="flex items-center space-x-4">
         {/* 代理状态 */}

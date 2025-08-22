@@ -9,17 +9,25 @@ import { cn } from '../lib/utils'
  * 主布局组件
  */
 const MainLayout = ({ children }) => {
-  const { theme } = useAppStore()
+  const { theme, themeColor } = useAppStore()
 
   // 应用主题到document
   useEffect(() => {
     const root = document.documentElement
+    
+    // 清除所有主题类
+    root.classList.remove('dark', 'theme-green', 'theme-red', 'theme-blue', 'theme-purple')
+    
+    // 应用暗色主题
     if (theme === 'dark') {
       root.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
     }
-  }, [theme])
+    
+    // 应用颜色主题
+    if (themeColor && themeColor !== 'default') {
+      root.classList.add(`theme-${themeColor}`)
+    }
+  }, [theme, themeColor])
 
   return (
     <div className={cn(

@@ -5,6 +5,7 @@ import useAppStore from '../store/useAppStore'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
+import { Loading } from '../components/ui/Loading'
 import { GetLogLines } from '../../wailsjs/go/main/App'
 
 /**
@@ -52,15 +53,22 @@ const HomePage = () => {
   const loadLogsFromFile = async () => {
     setIsLoading(true)
     try {
-      const logLines = await GetLogLines(100) // 读取最后100行
-      const parsedLogs = logLines
-        .filter(line => line.trim()) // 过滤空行
-        .map(parseLogLine)
-        .filter(log => log.message.trim()) // 过滤空消息
-      
-      setFileLogs(parsedLogs)
+      // 检查Go绑定是否可用
+      if (typeof window !== 'undefined' && window.go && window.go.main && window.go.main.App) {
+        const logLines = await GetLogLines(100) // 读取最后100行
+        const parsedLogs = logLines
+          .filter(line => line.trim()) // 过滤空行
+          .map(parseLogLine)
+          .filter(log => log.message.trim()) // 过滤空消息
+        
+        setFileLogs(parsedLogs)
+      } else {
+        console.warn('Go bindings not available. Please access the app through the Wails URL (http://localhost:34115) instead of the dev server URL.')
+        setFileLogs([])
+      }
     } catch (error) {
       console.error('Failed to load logs:', error)
+      setFileLogs([])
     } finally {
       setIsLoading(false)
     }
@@ -87,12 +95,12 @@ const HomePage = () => {
     <div className="space-y-6">
       {/* 页面标题 */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">控制台</h1>
-        <p className="text-muted-foreground">管理您的代理服务器和查看系统状态</p>
+        <h1 className="text-xl font-semibold text-foreground">控制台</h1>
+        <p className="text-sm text-muted-foreground">管理您的代理服务器和查看系统状态</p>
       </div>
 
       {/* 卡片网格 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-16">
         {/* 服务器列表卡片 */}
         <Card>
           <CardHeader>
@@ -101,55 +109,60 @@ const HomePage = () => {
                 <Server className="w-5 h-5 text-primary" />
                 <span>服务器列表</span>
               </CardTitle>
-              <Button size="sm">
+              <Button 
+                size="sm"
+                className="bg-theme hover:bg-theme/50 text-theme-foreground cursor-pointer"
+              >
                 <Plus className="w-4 h-4 mr-1" />
                 添加
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {servers.length === 0 ? (
+          <CardContent>
+            {!servers || servers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Server className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>暂无服务器配置</p>
                 <p className="text-sm">点击上方添加按钮创建第一个服务器</p>
               </div>
             ) : (
-              servers.map((server) => (
-                <div
-                  key={server.id}
-                  className={cn(
-                    "flex items-center justify-between p-3 rounded-md border transition-all",
-                    activeServer?.id === server.id
-                      ? "bg-primary/10 border-primary"
-                      : "bg-muted/50 border-border hover:bg-muted"
-                  )}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={cn(
-                      "w-2 h-2 rounded-full",
-                      activeServer?.id === server.id && proxyStatus === 'running'
-                        ? "bg-green-500"
-                        : "bg-gray-400"
-                    )} />
-                    <div>
-                      <div className="font-medium text-card-foreground">{server.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {server.protocol}://{server.address}:{server.port}
+              <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
+                {servers && servers.map((server) => (
+                  <div
+                    key={server.id}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-md border transition-all",
+                      activeServer?.id === server.id
+                        ? "bg-primary/10 border-primary"
+                        : "bg-muted/50 border-border hover:bg-muted"
+                    )}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        activeServer?.id === server.id && proxyStatus === 'running'
+                          ? "bg-green-500"
+                          : "bg-gray-400"
+                      )} />
+                      <div>
+                        <div className="font-medium text-card-foreground">{server.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {server.protocol}://{server.address}:{server.port}
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={
+                        server.protocol === 'vmess' ? 'info' :
+                        server.protocol === 'vless' ? 'success' :
+                        'secondary'
+                      }>
+                        {server.protocol.toUpperCase()}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant={
-                      server.protocol === 'vmess' ? 'info' :
-                      server.protocol === 'vless' ? 'success' :
-                      'secondary'
-                    }>
-                      {server.protocol.toUpperCase()}
-                    </Badge>
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -202,8 +215,11 @@ const HomePage = () => {
             {/* 控制按钮 */}
             <div className="pt-4 border-t border-border">
               <Button 
-                className="w-full" 
-                variant={proxyStatus === 'running' ? 'destructive' : 'default'}
+                className={cn(
+                  "w-full transition-all duration-200 transform hover:scale-105 active:scale-95",
+                  "bg-theme hover:bg-theme/50 text-theme-foreground shadow-lg hover:shadow-xl cursor-pointer"
+                )}
+                variant="ghost"
               >
                 {proxyStatus === 'running' ? '停止代理' : '启动代理'}
               </Button>
@@ -222,9 +238,15 @@ const HomePage = () => {
           <CardContent>
             <div className="bg-muted/50 rounded-md p-4 h-64 overflow-auto font-mono text-sm">
             {allLogs.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>{isLoading ? '正在加载日志...' : '暂无日志信息'}</p>
+              <div className="text-center py-8">
+                {isLoading ? (
+                  <Loading variant="pulse" text="正在加载日志..." size="default" />
+                ) : (
+                  <div className="text-muted-foreground">
+                    <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>暂无日志信息</p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-1">

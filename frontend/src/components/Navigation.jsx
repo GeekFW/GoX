@@ -47,7 +47,7 @@ const Navigation = () => {
           <Button
             key={item.id}
             variant={isActive ? "default" : "ghost"}
-            className="flex items-center space-x-2 px-3 py-2 h-auto text-sm font-medium"
+            className="flex items-center space-x-2 px-3 py-2 h-auto text-sm font-medium cursor-pointer"
             onClick={() => setCurrentPage(item.id)}
             title={item.description}
           >
